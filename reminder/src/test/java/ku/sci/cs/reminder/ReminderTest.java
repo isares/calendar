@@ -11,6 +11,7 @@ import org.junit.Test;
 public class ReminderTest {
 	
 	Date date;
+	Date time;
 	String note;
 	Reminder reminder;
 	Control control;
@@ -18,16 +19,16 @@ public class ReminderTest {
 	
 	@Before
 	public void setUp(){
-		date = new Date(105,10,5);
+		String dateTime = "12/03/2010 08:00";
 		note = "test";
-		reminder = new Reminder(date,note);
+		reminder = new Reminder(dateTime,note);
 		control = new Control();
 		reminderArray = new ArrayList<Reminder>();
 	}
 
 	@Test
 	public void getDateReminder() {
-		assertEquals(date,reminder.getDate());
+		assertEquals(date,reminder.getDateTime());
 	}
 	
 	@Test
@@ -43,7 +44,7 @@ public class ReminderTest {
 	@Test
 	public void addReminder() {
 		int sizeBeforeAdd = control.getReminder().size();
-		control.addReminder(date,note);
+		control.addReminder(date,time,note);
 		int sizeAfterAdd = control.getReminder().size();
 		assertTrue(sizeBeforeAdd < sizeAfterAdd);
 	}
