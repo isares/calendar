@@ -20,7 +20,7 @@ public class Control {
 		view.frame.setVisible(true);
 	}
 	
-	public void connectSQLite(){
+	public Boolean connectSQLite(){
 		try {
 			// setup
 			Class.forName("org.sqlite.JDBC");
@@ -30,18 +30,22 @@ public class Control {
 				System.out.println("Connected to the database....");
 				statement = connect.createStatement();
 			}
+			return true;
 		} catch (ClassNotFoundException ex) {
 			ex.printStackTrace();
 		} catch (SQLException ex) {
 			ex.printStackTrace();
 		}
+		return false;
 	}
 	
-	public void closeConnectSQLite(){
+	public Boolean closeConnectSQLite(){
 		try {
 			connect.close();
+			return true;
 		} catch (SQLException e) {
 			e.printStackTrace();
+			return false;
 		}
 	}
 	
