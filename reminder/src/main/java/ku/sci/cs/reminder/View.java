@@ -12,6 +12,7 @@ import java.util.Date;
 
 import javax.swing.GroupLayout;
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -35,11 +36,13 @@ public class View {
 	private JTable showReminder;
 	private JXDatePicker datePicker;
 	private JTextArea textNote;
+	private JComboBox repeatCB;
 	private Control control;
 	
 	public View() {
 		control = new Control();
 		control.connectSQLite();
+		control.repeatedCheck();
 		frame = new JFrame();
 		frame.setBounds(100, 100, 501, 396);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -57,20 +60,22 @@ public class View {
 	private void home() {
 		
 		//table
-		String[] column = {"Date and Time","Note"};
+		String[] column = {"Date and Time","Note","Repeat"};
 		DefaultTableModel tableModel = new DefaultTableModel(column, 0);
 		showReminder = new JTable(tableModel);
 		TableColumnModel tcm = showReminder.getColumnModel();
 		DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
 		centerRenderer.setHorizontalAlignment(SwingConstants.CENTER);
 		showReminder.getColumnModel().getColumn(0).setCellRenderer(centerRenderer);
-		tcm.getColumn(1).setPreferredWidth(250);	//Note
+		showReminder.getColumnModel().getColumn(2).setCellRenderer(centerRenderer);
+		tcm.getColumn(0).setPreferredWidth(120);	//datetime
+		tcm.getColumn(1).setPreferredWidth(250);	//note
+		tcm.getColumn(2).setPreferredWidth(70);		//repeat
 		JScrollPane scrollPane = new JScrollPane(showReminder);
 		
 		ArrayList<Reminder> reminder = control.getReminder();
 		for (Reminder data : reminder){
-			String dateTime = data.getDateTime();
-			String[] row = {dateTime,data.getNote()};
+			String[] row = {data.getDateTime(),data.getNote(),data.getRepeat()};
 			tableModel.addRow(row);
 		}
 		
@@ -97,7 +102,7 @@ public class View {
 		btnAdd.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				frame.getContentPane().removeAll();
-				add_edit("add",null,"");
+				add_edit("add",null,"","None");
 				frame.getContentPane().validate();
 			}
 		});
@@ -152,6 +157,8 @@ public class View {
 					return String.class;
 				case 2:
 					return String.class;
+				case 3:
+					return String.class;
 				default:
 					return String.class;
 				}
@@ -162,19 +169,22 @@ public class View {
 		tableModel.addColumn("Select");
 		tableModel.addColumn("Date and Time");
 		tableModel.addColumn("Note");
+		tableModel.addColumn("Repeat");
 
 		TableColumnModel tcm = showReminder.getColumnModel();
 		DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
 		centerRenderer.setHorizontalAlignment(SwingConstants.CENTER);
 		showReminder.getColumnModel().getColumn(1).setCellRenderer(centerRenderer);
+		showReminder.getColumnModel().getColumn(3).setCellRenderer(centerRenderer);
 		tcm.getColumn(1).setPreferredWidth(150);	//datetime
-		tcm.getColumn(2).setPreferredWidth(250);	//note
+		tcm.getColumn(2).setPreferredWidth(205);	//note
+		tcm.getColumn(3).setPreferredWidth(80);		//repeat
 		JScrollPane scrollPane = new JScrollPane(showReminder);
 		
 		//add table data
 		ArrayList<Reminder> reminder = control.getReminder();
 		for (Reminder data : reminder){
-			Object[] add = {false,data.getDateTime(),data.getNote()};
+			Object[] add = {false,data.getDateTime(),data.getNote(),data.getRepeat()};
 			tableModel.addRow(add);
 		}
 		
@@ -235,11 +245,12 @@ public class View {
 					for (int i = 0; i < showReminder.getRowCount(); i++) {
 						Boolean checked = Boolean.valueOf(showReminder.getValueAt(i, 0).toString());
 						if (checked == true) {
-							String dateTime = showReminder.getValueAt(i, 1).toString();
-							String note = showReminder.getValueAt(i, 2).toString();
+							String dateTime = showReminder.getValueAt(i,1).toString();
+							String note = showReminder.getValueAt(i,2).toString();
+							String repeat = showReminder.getValueAt(i,3).toString();
 							
 							frame.getContentPane().removeAll();
-							add_edit("edit",dateTime,note);
+							add_edit("edit",dateTime,note,repeat);
 							frame.getContentPane().validate();
 						}
 					}
@@ -296,7 +307,7 @@ public class View {
 		frame.getContentPane().setLayout(groupLayout);
 	}
 
-	private void add_edit(final String option,final String dateTime_org,String note_org) {
+	private void add_edit(final String option,final String dateTime_org,String note_org,String repeat_org) {
 		
 		datePicker = new JXDatePicker();
 		
@@ -322,6 +333,16 @@ public class View {
 		JSpinner.DateEditor de = new JSpinner.DateEditor(spinner, "HH:mm");
 		spinner.setEditor(de);
 		
+		JLabel lblRepeat = new JLabel("Repeat");
+		
+		String[] repeatList = {"None","Daily","Weekly","Monthly"};
+		repeatCB = new JComboBox(repeatList);
+		for (int i = 0 ; i < repeatList.length ; i++){
+			if (repeatList[i].equals(repeat_org)){
+				repeatCB.setSelectedIndex(i);
+			}
+		}
+		
 		JButton btnSubmit = new JButton();
 		if (option == "add"){
 			btnSubmit.setText("Add");
@@ -334,8 +355,9 @@ public class View {
 				Date date = datePicker.getDate();
 		        String note = textNote.getText();
 		        Date time = (Date) spinner.getValue();
+		        String repeat = (String) repeatCB.getSelectedItem();
 		        if (option == "add"){
-		        	Boolean check = control.addReminder(date,time,note);
+		        	Boolean check = control.addReminder(date,time,note,repeat);
 		        	if (check == false){
 			        	JOptionPane t = new JOptionPane();
 			        	t.showMessageDialog(frame,
@@ -349,7 +371,7 @@ public class View {
 			        	frame.getContentPane().validate();
 			        }
 		        } else if (option == "edit"){
-		        	Boolean check = control.updateReminder(dateTime_org,date,time,note);
+		        	Boolean check = control.updateReminder(dateTime_org,date,time,note,repeat);
 		        	if (check == false){
 		        		JOptionPane t = new JOptionPane();
 			        	t.showMessageDialog(frame,
@@ -390,6 +412,8 @@ public class View {
 						.addComponent(datePicker, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
 						.addComponent(lblDate)
 						.addComponent(lblTime)
+						.addComponent(lblRepeat)
+						.addComponent(repeatCB, 0, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
 						.addComponent(spinner))
 					.addGap(11)
 					.addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
@@ -401,7 +425,7 @@ public class View {
 					.addComponent(btnCancel, GroupLayout.PREFERRED_SIZE, 112, GroupLayout.PREFERRED_SIZE)
 					.addPreferredGap(ComponentPlacement.RELATED, 187, Short.MAX_VALUE)
 					.addComponent(btnSubmit, GroupLayout.PREFERRED_SIZE, 112, GroupLayout.PREFERRED_SIZE)
-					.addContainerGap(20, Short.MAX_VALUE))
+					.addContainerGap(19, Short.MAX_VALUE))
 		);
 		groupLayout.setVerticalGroup(
 			groupLayout.createParallelGroup(Alignment.LEADING)
@@ -421,7 +445,11 @@ public class View {
 							.addComponent(lblTime)
 							.addPreferredGap(ComponentPlacement.RELATED)
 							.addComponent(spinner, GroupLayout.PREFERRED_SIZE, 28, GroupLayout.PREFERRED_SIZE)
-							.addPreferredGap(ComponentPlacement.RELATED)))
+							.addPreferredGap(ComponentPlacement.UNRELATED)
+							.addComponent(lblRepeat)
+							.addPreferredGap(ComponentPlacement.RELATED)
+							.addComponent(repeatCB, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+							.addGap(100)))
 					.addGroup(groupLayout.createParallelGroup(Alignment.BASELINE)
 						.addComponent(btnCancel)
 						.addComponent(btnSubmit))
