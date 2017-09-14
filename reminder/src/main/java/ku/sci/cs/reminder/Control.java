@@ -13,9 +13,9 @@ import java.text.SimpleDateFormat;
 public class Control {
 
 	private View view;
-	private String dbURL;
 	private Connection connect;
 	private Statement statement;
+	private ArrayList<Reminder> reminderArray;
 	
 	public void Run(){
 		view = new View();
@@ -26,7 +26,7 @@ public class Control {
 		try {
 			// setup
 			Class.forName("org.sqlite.JDBC");
-			dbURL = "jdbc:sqlite:reminder.db";
+			String dbURL = "jdbc:sqlite:reminder.db";
 			connect = DriverManager.getConnection(dbURL);
 			if (connect != null) {
 				System.out.println("Connected to the database....");
@@ -51,7 +51,7 @@ public class Control {
 		}
 	}
 	
-	public Boolean addReminder(java.util.Date inDate,java.util.Date inTime,String inNote,String inRepeat){
+	public Boolean addReminder(Date inDate,Date inTime,String inNote,String inRepeat){
 		SimpleDateFormat dformat = new SimpleDateFormat("dd/MM/yyyy");
         String date = dformat.format(inDate);
         
@@ -104,7 +104,7 @@ public class Control {
 	}
 	
 	public ArrayList<Reminder> getReminder(){
-		ArrayList<Reminder> reminderArray = new ArrayList<Reminder>();
+		reminderArray = new ArrayList<Reminder>();
 		try {
 			String query = "Select * from reminder";
 			Statement statement = connect.createStatement();
