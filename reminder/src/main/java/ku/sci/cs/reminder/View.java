@@ -2,10 +2,13 @@
 
 package ku.sci.cs.reminder;
 
+import java.awt.Graphics;
+import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.image.BufferedImage;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -24,6 +27,7 @@ import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.SwingConstants;
 import javax.swing.GroupLayout.Alignment;
+import javax.swing.ImageIcon;
 import javax.swing.LayoutStyle.ComponentPlacement;
 import javax.swing.SpinnerDateModel;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -63,7 +67,7 @@ public class View {
 		
 		//table
 		String[] column = {"Date and Time","Note","Repeat"};
-		DefaultTableModel tableModel = new DefaultTableModel(column, 0);
+		final DefaultTableModel tableModel = new DefaultTableModel(column, 0);
 		showReminder = new JTable(tableModel);
 		TableColumnModel tcm = showReminder.getColumnModel();
 		DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
@@ -109,7 +113,32 @@ public class View {
 			}
 		});
 		
-		JLabel space = new JLabel("All Reminder");
+		JLabel lblInfo = new JLabel("All Reminder");
+		
+		ImageIcon searchIcon = new ImageIcon("icon/search-icon.png", "search icon");
+		Image img = searchIcon.getImage(); 
+		BufferedImage bi = new BufferedImage(img.getWidth(null), img.getHeight(null), BufferedImage.TYPE_INT_ARGB); 
+		Graphics g = bi.createGraphics(); 
+		g.drawImage(img, 0, 0, 20, 20, null); 
+		searchIcon = new ImageIcon(bi);
+		JLabel lblSearch = new JLabel(searchIcon);
+		
+		final JXDatePicker searchDatePicker = new JXDatePicker();
+		searchDatePicker.setFormats(new SimpleDateFormat("dd/MM/yyyy"));
+		searchDatePicker.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				for (int i = tableModel.getRowCount() - 1; i > -1; i--) {
+					tableModel.removeRow(i);
+			    }
+				
+				Date date = searchDatePicker.getDate();
+				ArrayList<Reminder> search = control.searchReminder(date);
+				for (Reminder reminder : search){
+					String[] row = {reminder.getDateTime(),reminder.getNote(),reminder.getRepeat()};
+					tableModel.addRow(row);
+				}
+			}
+		});
 		
 		//set view
 		GroupLayout groupLayout = new GroupLayout(frame.getContentPane());
@@ -117,25 +146,32 @@ public class View {
 			groupLayout.createParallelGroup(Alignment.LEADING)
 				.addGroup(groupLayout.createSequentialGroup()
 					.addGap(29)
-					.addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
-						.addComponent(space)
-						.addGroup(groupLayout.createParallelGroup(Alignment.TRAILING, false)
-							.addGroup(groupLayout.createSequentialGroup()
-								.addComponent(btnDelete, GroupLayout.PREFERRED_SIZE, 112, GroupLayout.PREFERRED_SIZE)
-								.addPreferredGap(ComponentPlacement.RELATED, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-								.addComponent(btnEdit, GroupLayout.PREFERRED_SIZE, 112, GroupLayout.PREFERRED_SIZE)
-								.addGap(43)
-								.addComponent(btnAdd, GroupLayout.PREFERRED_SIZE, 112, GroupLayout.PREFERRED_SIZE))
-							.addComponent(scrollPane, GroupLayout.PREFERRED_SIZE, 424, GroupLayout.PREFERRED_SIZE)))
+					.addGroup(groupLayout.createParallelGroup(Alignment.LEADING, false)
+						.addGroup(groupLayout.createSequentialGroup()
+							.addComponent(lblInfo)
+							.addPreferredGap(ComponentPlacement.RELATED, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+							.addComponent(lblSearch)
+							.addPreferredGap(ComponentPlacement.RELATED)
+							.addComponent(searchDatePicker, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
+						.addGroup(Alignment.TRAILING, groupLayout.createSequentialGroup()
+							.addComponent(btnDelete, GroupLayout.PREFERRED_SIZE, 106, GroupLayout.PREFERRED_SIZE)
+							.addPreferredGap(ComponentPlacement.RELATED, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+							.addComponent(btnEdit, GroupLayout.PREFERRED_SIZE, 112, GroupLayout.PREFERRED_SIZE)
+							.addGap(46)
+							.addComponent(btnAdd, GroupLayout.PREFERRED_SIZE, 111, GroupLayout.PREFERRED_SIZE))
+						.addComponent(scrollPane, Alignment.TRAILING, GroupLayout.PREFERRED_SIZE, 424, GroupLayout.PREFERRED_SIZE))
 					.addContainerGap(32, Short.MAX_VALUE))
 		);
 		groupLayout.setVerticalGroup(
 			groupLayout.createParallelGroup(Alignment.TRAILING)
 				.addGroup(groupLayout.createSequentialGroup()
 					.addContainerGap()
-					.addComponent(space)
+					.addGroup(groupLayout.createParallelGroup(Alignment.BASELINE)
+						.addComponent(lblInfo)
+						.addComponent(searchDatePicker, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+						.addComponent(lblSearch))
 					.addPreferredGap(ComponentPlacement.RELATED)
-					.addComponent(scrollPane, GroupLayout.DEFAULT_SIZE, 283, Short.MAX_VALUE)
+					.addComponent(scrollPane, GroupLayout.DEFAULT_SIZE, 272, Short.MAX_VALUE)
 					.addPreferredGap(ComponentPlacement.UNRELATED)
 					.addGroup(groupLayout.createParallelGroup(Alignment.BASELINE)
 						.addComponent(btnAdd, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
@@ -269,12 +305,12 @@ public class View {
 			}
 		});
 		
-		JLabel info = new JLabel(" ");
+		JLabel lblInfo = new JLabel(" ");
 		
 		if (option == "delete"){
-			info.setText("Choose note to delete");
+			lblInfo.setText("Choose note to delete");
 		} else if (option == "edit"){
-			info.setText("Choose note to edit (Can edit only 1 note per time)");
+			lblInfo.setText("Choose note to edit (Can edit only 1 note per time)");
 		}
 		
 		//set view
@@ -284,7 +320,7 @@ public class View {
 				.addGroup(groupLayout.createSequentialGroup()
 					.addGap(29)
 					.addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
-						.addComponent(info)
+						.addComponent(lblInfo)
 						.addGroup(groupLayout.createParallelGroup(Alignment.TRAILING, false)
 							.addGroup(groupLayout.createSequentialGroup()
 								.addComponent(btnCancel, GroupLayout.PREFERRED_SIZE, 112, GroupLayout.PREFERRED_SIZE)
@@ -297,7 +333,7 @@ public class View {
 				groupLayout.createParallelGroup(Alignment.TRAILING)
 					.addGroup(groupLayout.createSequentialGroup()
 						.addContainerGap()
-						.addComponent(info)
+						.addComponent(lblInfo)
 						.addPreferredGap(ComponentPlacement.RELATED)
 						.addComponent(scrollPane, GroupLayout.DEFAULT_SIZE, 283, Short.MAX_VALUE)
 						.addPreferredGap(ComponentPlacement.UNRELATED)

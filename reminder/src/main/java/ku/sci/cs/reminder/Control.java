@@ -123,6 +123,21 @@ public class Control {
 		return reminderArray;
 	}
 	
+	public ArrayList<Reminder> searchReminder(Date inDate){
+		ArrayList<Reminder> array = new ArrayList<Reminder>();
+		
+		SimpleDateFormat dformat = new SimpleDateFormat("dd/MM/yyyy");
+        String date = dformat.format(inDate);
+
+        for (Reminder reminder : reminderArray){
+        	String[] list = reminder.getDateTime().split(" ");
+        	if (list[0].equals(date)){
+        		array.add(reminder);
+        	}
+        }
+		return array;
+	}
+	
 	public void repeatedCheck(){
 		try {
 			String query = "Select * from reminder";
